@@ -3,7 +3,7 @@ import { restaurantApi, Restaurant } from '../api/restaurant';
 import './Settings.css';
 
 function Settings() {
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
