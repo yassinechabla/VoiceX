@@ -45,6 +45,15 @@ function Settings() {
       setSaving(true);
       const updated = await restaurantApi.update(formData);
       setRestaurant(updated);
+      // Update form data with the saved values
+      setFormData({
+        name: updated.name,
+        phoneNumber: updated.phoneNumber,
+        slotMinutes: updated.slotMinutes,
+        avgDurationMin: updated.avgDurationMin,
+        bufferMin: updated.bufferMin,
+        timezone: updated.timezone,
+      });
       alert('Settings saved successfully!');
     } catch (error) {
       console.error('Failed to save settings:', error);
