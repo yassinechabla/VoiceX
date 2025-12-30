@@ -1,0 +1,131 @@
+stages:
+  - lint
+  - test
+  - build
+  - docker
+
+variables:
+  NODE_VERSION: "20"
+
+# Lint stage
+lint:backend:
+  stage: lint
+  image: node:${NODE_VERSION}-alpine
+  script:
+    - cd backend
+    - npm ci
+    - npm run lint
+  only:
+    - merge_requests
+    - main
+    - develop
+
+lint:ai:
+  stage: lint
+  image: node:${NODE_VERSION}-alpine
+  script:
+    - cd microservices/ai
+    - npm ci
+    - npm run lint
+  only:
+    - merge_requests
+    - main
+    - develop
+
+lint:admin:
+  stage: lint
+  image: node:${NODE_VERSION}-alpine
+  script:
+    - cd admin
+    - npm ci
+    - npm run lint
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# Test stage
+test:backend:
+  stage: test
+  image: node:${NODE_VERSION}-alpine
+  services:
+    - mongo:7
+  variables:
+    MONGODB_URI: "mongodb://mongo:27017/test"
+  script:
+    - cd backend
+    - npm ci
+    - npm test || echo "Tests not yet implemented"
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# Build stage
+build:backend:
+  stage: build
+  image: node:${NODE_VERSION}-alpine
+  script:
+    - cd backend
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - backend/dist/
+    expire_in: 1 hour
+  only:
+    - merge_requests
+    - main
+    - develop
+
+build:ai:
+  stage: build
+  image: node:${NODE_VERSION}-alpine
+  script:
+    - cd microservices/ai
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - microservices/ai/dist/
+    expire_in: 1 hour
+  only:
+    - merge_requests
+    - main
+    - develop
+
+build:admin:
+  stage: build
+  image: node:${NODE_VERSION}-alpine
+  script:
+    - cd admin
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - admin/dist/
+    expire_in: 1 hour
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# Docker build stage (optional, for registry)
+docker:build:
+  stage: docker
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE/backend:latest ./backend
+    - docker build -t $CI_REGISTRY_IMAGE/ai:latest ./microservices/ai
+    - docker build -t $CI_REGISTRY_IMAGE/admin:latest ./admin
+    - docker push $CI_REGISTRY_IMAGE/backend:latest
+    - docker push $CI_REGISTRY_IMAGE/ai:latest
+    - docker push $CI_REGISTRY_IMAGE/admin:latest
+  only:
+    - main
+  when: manual
+

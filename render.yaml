@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: backend
+    env: node
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: USE_HTTPS
+        value: false
+      - key: PORT
+        fromService:
+          type: web
+          name: backend
+          property: port
+
+  - type: web
+    name: ai
+    env: node
+    buildCommand: cd microservices/ai && npm install && npm run build
+    startCommand: cd microservices/ai && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        fromService:
+          type: web
+          name: ai
+          property: port
+
+  - type: web
+    name: admin
+    env: node
+    buildCommand: cd admin && npm install && npm run build
+    staticPublishPath: ./admin/dist
+    envVars:
+      - key: NODE_ENV
+        value: production
+

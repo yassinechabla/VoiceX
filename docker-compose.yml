@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: restaurant-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: restaurant-reservations
+    networks:
+      - restaurant-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: restaurant-backend
+    ports:
+      - "3443:3443"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/restaurant-reservations
+      - HTTPS_CERT_PATH=/app/certs/cert.pem
+      - HTTPS_KEY_PATH=/app/certs/privkey.pem
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      - JWT_EXPIRES_IN=2h
+      - ADMIN_ORIGIN=http://localhost:5173
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+      - TWILIO_WEBHOOK_BASE_URL=${TWILIO_WEBHOOK_BASE_URL}
+      - AI_SERVICE_URL=http://ai:4000
+    volumes:
+      - ./certs:/app/certs:ro
+    depends_on:
+      - mongodb
+      - ai
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+
+  ai:
+    build:
+      context: ./microservices/ai
+      dockerfile: Dockerfile
+    container_name: restaurant-ai
+    ports:
+      - "4000:4000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PORT=4000
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: restaurant-admin
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - restaurant-network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+
+networks:
+  restaurant-network:
+    driver: bridge
+

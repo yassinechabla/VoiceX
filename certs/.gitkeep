@@ -1,0 +1,3 @@
+# This directory contains HTTPS certificates
+# Generate self-signed certificates using scripts/generate-certs.sh
+
