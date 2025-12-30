@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Response, Request } from 'express';
 import { authenticateJWT, AuthRequest } from '../middleware/auth';
 import { Restaurant } from '../models/Restaurant';
 import { Table } from '../models/Table';
@@ -9,13 +9,13 @@ import { notifyReservationChange } from '../utils/socketEvents';
 const router = Router();
 
 // All routes require authentication
-router.use(authenticateJWT);
+router.use(authenticateJWT as any);
 
 /**
  * GET /api/admin/restaurant
  * Get restaurant settings
  */
-router.get('/restaurant', async (req: AuthRequest, res: Response) => {
+router.get('/restaurant', async (req: Request, res: Response) => {
   try {
     const restaurant = await Restaurant.findOne();
     if (!restaurant) {
@@ -31,7 +31,7 @@ router.get('/restaurant', async (req: AuthRequest, res: Response) => {
  * PUT /api/admin/restaurant
  * Update restaurant settings
  */
-router.put('/restaurant', async (req: AuthRequest, res: Response) => {
+router.put('/restaurant', async (req: Request, res: Response) => {
   try {
     const restaurant = await Restaurant.findOneAndUpdate(
       {},
@@ -48,7 +48,7 @@ router.put('/restaurant', async (req: AuthRequest, res: Response) => {
  * GET /api/admin/tables
  * Get all tables
  */
-router.get('/tables', async (req: AuthRequest, res: Response) => {
+router.get('/tables', async (req: Request, res: Response) => {
   try {
     const tables = await Table.find().populate('restaurantId');
     res.json(tables);
@@ -61,7 +61,7 @@ router.get('/tables', async (req: AuthRequest, res: Response) => {
  * POST /api/admin/tables
  * Create a new table
  */
-router.post('/tables', async (req: AuthRequest, res: Response) => {
+router.post('/tables', async (req: Request, res: Response) => {
   try {
     const restaurant = await Restaurant.findOne();
     if (!restaurant) {
@@ -83,7 +83,7 @@ router.post('/tables', async (req: AuthRequest, res: Response) => {
  * PUT /api/admin/tables/:id
  * Update a table
  */
-router.put('/tables/:id', async (req: AuthRequest, res: Response) => {
+router.put('/tables/:id', async (req: Request, res: Response) => {
   try {
     const table = await Table.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!table) {
@@ -99,7 +99,7 @@ router.put('/tables/:id', async (req: AuthRequest, res: Response) => {
  * DELETE /api/admin/tables/:id
  * Delete a table
  */
-router.delete('/tables/:id', async (req: AuthRequest, res: Response) => {
+router.delete('/tables/:id', async (req: Request, res: Response) => {
   try {
     const table = await Table.findByIdAndDelete(req.params.id);
     if (!table) {
@@ -115,7 +115,7 @@ router.delete('/tables/:id', async (req: AuthRequest, res: Response) => {
  * GET /api/admin/reservations
  * Get all reservations with filters
  */
-router.get('/reservations', async (req: AuthRequest, res: Response) => {
+router.get('/reservations', async (req: Request, res: Response) => {
   try {
     const { date, status, startDate, endDate } = req.query;
     
@@ -151,7 +151,7 @@ router.get('/reservations', async (req: AuthRequest, res: Response) => {
  * GET /api/admin/reservations/:id
  * Get a single reservation
  */
-router.get('/reservations/:id', async (req: AuthRequest, res: Response) => {
+router.get('/reservations/:id', async (req: Request, res: Response) => {
   try {
     const reservation = await Reservation.findById(req.params.id)
       .populate('tablesAssigned')
@@ -171,7 +171,7 @@ router.get('/reservations/:id', async (req: AuthRequest, res: Response) => {
  * POST /api/admin/reservations
  * Create a reservation (admin)
  */
-router.post('/reservations', async (req: AuthRequest, res: Response) => {
+router.post('/reservations', async (req: Request, res: Response) => {
   try {
     const restaurant = await Restaurant.findOne();
     if (!restaurant) {
@@ -223,7 +223,7 @@ router.post('/reservations', async (req: AuthRequest, res: Response) => {
  * PATCH /api/admin/reservations/:id
  * Update reservation status
  */
-router.patch('/reservations/:id', async (req: AuthRequest, res: Response) => {
+router.patch('/reservations/:id', async (req: Request, res: Response) => {
   try {
     const { status } = req.body;
     

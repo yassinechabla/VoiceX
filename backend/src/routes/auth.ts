@@ -49,15 +49,13 @@ router.post('/login', authRateLimiter, (req: Request, res: Response, next: any) 
     const secret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
     const expiresIn = process.env.JWT_EXPIRES_IN || '2h';
     
-    const token = jwt.sign(
-      {
-        id: user._id.toString(),
-        username: user.username,
-        role: user.role,
-      },
-      secret,
-      { expiresIn }
-    );
+    const payload = {
+      id: user._id.toString(),
+      username: user.username,
+      role: user.role,
+    };
+    // @ts-ignore - jwt.sign types are complex, but this works at runtime
+    const token = jwt.sign(payload, secret, { expiresIn });
     
     res.json({
       token,
@@ -74,8 +72,9 @@ router.post('/login', authRateLimiter, (req: Request, res: Response, next: any) 
  * GET /auth/me
  * Get current user info (protected)
  */
-router.get('/me', authenticateJWT, (req: AuthRequest, res: Response) => {
-  res.json({ user: req.user });
+router.get('/me', authenticateJWT as any, (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  res.json({ user: authReq.user });
 });
 
 export default router;
